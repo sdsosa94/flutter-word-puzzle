@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../providers.dart';
+import 'crossword_info_widget.dart';
 import 'crossword_widget.dart';
 
 class _EagerInitialization extends ConsumerWidget {
@@ -12,16 +13,18 @@ class _EagerInitialization extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(wordListProvider);
-    ref.watch(crosswordProvider);
+    ref.watch(workQueueProvider);
     return child;
   }
 }
 
-class CrosswordGeneratorApp extends StatelessWidget {
+class CrosswordGeneratorApp extends ConsumerWidget {
   const CrosswordGeneratorApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showDisplayInfo = ref.watch(showDisplayInfoProvider);
+
     return _EagerInitialization(
       child: Scaffold(
         appBar: AppBar(
@@ -30,7 +33,17 @@ class CrosswordGeneratorApp extends StatelessWidget {
             _CrosswordGeneratorMenu(),
           ],
         ),
-        body: const CrosswordWidget(),
+        body: Stack(
+          children: [
+            const CrosswordWidget(),
+            if (showDisplayInfo)
+              const Positioned(
+                top: 16,
+                right: 16,
+                child: CrosswordInfoWidget(),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -42,6 +55,8 @@ class _CrosswordGeneratorMenu extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentSize = ref.watch(sizeProvider);
+    final showDisplayInfo = ref.watch(showDisplayInfoProvider);
+
     return MenuAnchor(
       builder: (context, controller, child) {
         return IconButton(
@@ -53,20 +68,31 @@ class _CrosswordGeneratorMenu extends ConsumerWidget {
             }
           },
           icon: const Icon(Icons.more_vert),
-          tooltip: 'Grid Size',
+          tooltip: 'Grid Options',
         );
       },
-      menuChildren: CrosswordSize.values.map((size) {
-        return MenuItemButton(
+      menuChildren: [
+        MenuItemButton(
           onPressed: () {
-            ref.read(sizeProvider.notifier).setSize(size);
+            ref.read(showDisplayInfoProvider.notifier).toggle();
           },
-          leadingIcon: size == currentSize
-              ? const Icon(Icons.check, size: 18)
-              : const SizedBox(width: 18),
-          child: Text('${size.name} (${size.label})'),
-        );
-      }).toList(),
+          leadingIcon: showDisplayInfo
+              ? const Icon(Icons.check_box, size: 18)
+              : const Icon(Icons.check_box_outline_blank, size: 18),
+          child: const Text('Display Info'),
+        ),
+        ...CrosswordSize.values.map((size) {
+          return MenuItemButton(
+            onPressed: () {
+              ref.read(sizeProvider.notifier).setSize(size);
+            },
+            leadingIcon: size == currentSize
+                ? const Icon(Icons.check, size: 18)
+                : const SizedBox(width: 18),
+            child: Text('${size.name} (${size.label})'),
+          );
+        }),
+      ],
     );
   }
 }

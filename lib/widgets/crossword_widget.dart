@@ -26,9 +26,9 @@ class CrosswordWidget extends ConsumerWidget {
           child: Consumer(
             builder: (context, ref, child) {
               final character = ref.watch(
-                crosswordProvider.select(
-                  (asyncCrossword) =>
-                      asyncCrossword.value?.characters[location]?.character,
+                workQueueProvider.select(
+                  (asyncWorkQueue) =>
+                      asyncWorkQueue.value?.crossword.characters[location]?.character,
                 ),
               );
               return Container(

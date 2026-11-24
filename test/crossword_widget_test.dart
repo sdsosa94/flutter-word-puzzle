@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:built_collection/built_collection.dart';
 import 'package:generate_crossword/model.dart';
 import 'package:generate_crossword/providers.dart';
 import 'package:generate_crossword/widgets/crossword_widget.dart';
@@ -14,10 +13,16 @@ void main() {
       direction: Direction.across,
     )!;
 
+    final queue = WorkQueue.from(
+      crossword: crossword,
+      candidateWords: ['apple'],
+      startLocation: Location.at(0, 0),
+    );
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          crosswordProvider.overrideWith((ref) => Stream.value(crossword)),
+          workQueueProvider.overrideWith((ref) => Stream.value(queue)),
         ],
         child: const MaterialApp(
           home: Scaffold(

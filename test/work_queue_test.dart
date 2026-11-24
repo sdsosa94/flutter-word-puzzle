@@ -60,7 +60,7 @@ void main() {
     final stream = exploreCrosswordSolutions(crossword: crossword, wordList: words);
     final results = await stream.take(3).toList();
     expect(results.length, equals(3));
-    expect(results[0].words.length, equals(0));
-    expect(results[1].words.length, greaterThanOrEqualTo(1));
+    expect(results[0].crossword.words.length, equals(0));
+    expect(results[1].crossword.words.length, greaterThanOrEqualTo(1));
   });
 }

@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:built_collection/built_collection.dart';
+import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'isolates.dart';
@@ -51,14 +52,104 @@ class Size extends _$Size {
   }
 }
 
+@Riverpod(keepAlive: true)
+class StartTime extends _$StartTime {
+  @override
+  DateTime? build() => null;
+
+  void set(DateTime? time) => state = time;
+}
+
+@Riverpod(keepAlive: true)
+class EndTime extends _$EndTime {
+  @override
+  DateTime? build() => null;
+
+  void set(DateTime? time) => state = time;
+}
+
+@Riverpod(keepAlive: true)
+class ShowDisplayInfo extends _$ShowDisplayInfo {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+  void set(bool show) => state = show;
+}
+
+const _estimatedTotalCoverage = 0.54;
+
 @riverpod
-Stream<model.Crossword> crossword(Ref ref) async* {
+Duration expectedRemainingTime(Ref ref) {
+  final size = ref.watch(sizeProvider);
+  final startTime = ref.watch(startTimeProvider);
+  final endTime = ref.watch(endTimeProvider);
+  if (endTime != null || startTime == null) return Duration.zero;
+
+  final workQueueAsync = ref.watch(workQueueProvider);
+  final workQueue = workQueueAsync.value;
+  if (workQueue == null) return Duration.zero;
+
+  final filled = workQueue.crossword.characters.length;
+  if (filled == 0) return Duration.zero;
+
+  final totalCells = size.width * size.height;
+  final estimatedTotalCells = totalCells * _estimatedTotalCoverage;
+  if (filled >= estimatedTotalCells) return Duration.zero;
+
+  final elapsed = DateTime.now().difference(startTime);
+  final msPerCell = elapsed.inMilliseconds / filled;
+  final remainingCells = estimatedTotalCells - filled;
+  final remainingMs = (remainingCells * msPerCell).round();
+
+  return Duration(milliseconds: remainingMs);
+}
+
+@riverpod
+Stream<model.WorkQueue> workQueue(Ref ref) async* {
   final size = ref.watch(sizeProvider);
   final words = await ref.watch(wordListProvider.future);
   final initialCrossword =
       model.Crossword.crossword(width: size.width, height: size.height);
-  yield* exploreCrosswordSolutions(
+
+  Future.microtask(() {
+    ref.read(startTimeProvider.notifier).set(DateTime.now());
+    ref.read(endTimeProvider.notifier).set(null);
+  });
+
+  final stream = exploreCrosswordSolutions(
     crossword: initialCrossword,
     wordList: words,
   );
+
+  await for (final queue in stream) {
+    yield queue;
+    if (queue.isCompleted) {
+      Future.microtask(() {
+        ref.read(endTimeProvider.notifier).set(DateTime.now());
+      });
+    }
+  }
+
+  Future.microtask(() {
+    if (ref.read(endTimeProvider) == null) {
+      ref.read(endTimeProvider.notifier).set(DateTime.now());
+    }
+  });
+}
+
+@riverpod
+class DisplayInfo extends _$DisplayInfo {
+  @override
+  model.DisplayInfo build() {
+    return ref.watch(
+      workQueueProvider.select(
+        (asyncQueue) => asyncQueue.when(
+          data: (workQueue) => model.DisplayInfo.from(workQueue: workQueue),
+          error: (_, _) => model.DisplayInfo.empty,
+          loading: () => model.DisplayInfo.empty,
+        ),
+      ),
+    );
+  }
 }

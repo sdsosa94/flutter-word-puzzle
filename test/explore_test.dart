@@ -10,9 +10,9 @@ void main() {
 
     final stream = exploreCrosswordSolutions(crossword: crossword, wordList: words);
     final list = await stream.take(3).toList();
-    print('Yielded ${list.length} crosswords');
+    print('Yielded ${list.length} work queues');
     for (var i = 0; i < list.length; i++) {
-      print('Crossword $i words: ${list[i].words.length}, chars: ${list[i].characters.length}');
+      print('Queue $i words: ${list[i].crossword.words.length}, chars: ${list[i].crossword.characters.length}');
     }
   });
 }

@@ -1,6 +1,7 @@
 import 'package:built_collection/built_collection.dart';
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
+import 'package:intl/intl.dart';
 
 part 'model.g.dart';
 
@@ -323,11 +324,53 @@ abstract class WorkQueue implements Built<WorkQueue, WorkQueueBuilder> {
   static Serializer<WorkQueue> get serializer => _$workQueueSerializer;
 }
 
+abstract class DisplayInfo implements Built<DisplayInfo, DisplayInfoBuilder> {
+  String get wordsInGridCount;
+  String get candidateWordsCount;
+  String get locationsToExploreCount;
+  String get knownBadLocationsCount;
+  String get gridFilledPercentage;
+
+  DisplayInfo._();
+  factory DisplayInfo([void Function(DisplayInfoBuilder) updates]) =
+      _$DisplayInfo;
+
+  static DisplayInfo get empty => DisplayInfo((b) => b
+    ..wordsInGridCount = '0'
+    ..candidateWordsCount = '0'
+    ..locationsToExploreCount = '0'
+    ..knownBadLocationsCount = '0'
+    ..gridFilledPercentage = '0%');
+
+  factory DisplayInfo.from({required WorkQueue workQueue}) {
+    final formatter = NumberFormat.decimalPattern();
+    final totalCells =
+        workQueue.crossword.width * workQueue.crossword.height;
+    final percent = totalCells > 0
+        ? (workQueue.crossword.characters.length / totalCells * 100).round()
+        : 0;
+
+    return DisplayInfo((b) => b
+      ..wordsInGridCount =
+          formatter.format(workQueue.crossword.words.length)
+      ..candidateWordsCount =
+          formatter.format(workQueue.candidateWords.length)
+      ..locationsToExploreCount =
+          formatter.format(workQueue.locationsToTry.length)
+      ..knownBadLocationsCount =
+          formatter.format(workQueue.badLocations.length)
+      ..gridFilledPercentage = '${formatter.format(percent)}%');
+  }
+
+  static Serializer<DisplayInfo> get serializer => _$displayInfoSerializer;
+}
+
 @SerializersFor([
   Location,
   Crossword,
   CrosswordWord,
   CrosswordCharacter,
   WorkQueue,
+  DisplayInfo,
 ])
 final Serializers serializers = _$serializers;

@@ -99,41 +99,289 @@ abstract class _$Size extends $Notifier<CrosswordSize> {
   }
 }
 
-@ProviderFor(crossword)
-final crosswordProvider = CrosswordProvider._();
+@ProviderFor(StartTime)
+final startTimeProvider = StartTimeProvider._();
 
-final class CrosswordProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<model.Crossword>,
-          model.Crossword,
-          Stream<model.Crossword>
-        >
-    with $FutureModifier<model.Crossword>, $StreamProvider<model.Crossword> {
-  CrosswordProvider._()
+final class StartTimeProvider extends $NotifierProvider<StartTime, DateTime?> {
+  StartTimeProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'crosswordProvider',
+        name: r'startTimeProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$startTimeHash();
+
+  @$internal
+  @override
+  StartTime create() => StartTime();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DateTime? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DateTime?>(value),
+    );
+  }
+}
+
+String _$startTimeHash() => r'27774b2794e5070ebe1297f5596ac3fd2ea8bbc6';
+
+abstract class _$StartTime extends $Notifier<DateTime?> {
+  DateTime? build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<DateTime?, DateTime?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<DateTime?, DateTime?>,
+              DateTime?,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(EndTime)
+final endTimeProvider = EndTimeProvider._();
+
+final class EndTimeProvider extends $NotifierProvider<EndTime, DateTime?> {
+  EndTimeProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'endTimeProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$endTimeHash();
+
+  @$internal
+  @override
+  EndTime create() => EndTime();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DateTime? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DateTime?>(value),
+    );
+  }
+}
+
+String _$endTimeHash() => r'5dd5eb7fbe0b46ce4bb5363aa3afec35e6daebeb';
+
+abstract class _$EndTime extends $Notifier<DateTime?> {
+  DateTime? build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<DateTime?, DateTime?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<DateTime?, DateTime?>,
+              DateTime?,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(ShowDisplayInfo)
+final showDisplayInfoProvider = ShowDisplayInfoProvider._();
+
+final class ShowDisplayInfoProvider
+    extends $NotifierProvider<ShowDisplayInfo, bool> {
+  ShowDisplayInfoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'showDisplayInfoProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$showDisplayInfoHash();
+
+  @$internal
+  @override
+  ShowDisplayInfo create() => ShowDisplayInfo();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$showDisplayInfoHash() => r'8748670b912f5eb97a923f4bdf8525f1d494a99f';
+
+abstract class _$ShowDisplayInfo extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(expectedRemainingTime)
+final expectedRemainingTimeProvider = ExpectedRemainingTimeProvider._();
+
+final class ExpectedRemainingTimeProvider
+    extends $FunctionalProvider<Duration, Duration, Duration>
+    with $Provider<Duration> {
+  ExpectedRemainingTimeProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'expectedRemainingTimeProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$crosswordHash();
+  String debugGetCreateSourceHash() => _$expectedRemainingTimeHash();
 
   @$internal
   @override
-  $StreamProviderElement<model.Crossword> $createElement(
+  $ProviderElement<Duration> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Duration create(Ref ref) {
+    return expectedRemainingTime(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Duration value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Duration>(value),
+    );
+  }
+}
+
+String _$expectedRemainingTimeHash() =>
+    r'd003b0c4af13bde1d8983cf5f4cad0a9e932b064';
+
+@ProviderFor(workQueue)
+final workQueueProvider = WorkQueueProvider._();
+
+final class WorkQueueProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<model.WorkQueue>,
+          model.WorkQueue,
+          Stream<model.WorkQueue>
+        >
+    with $FutureModifier<model.WorkQueue>, $StreamProvider<model.WorkQueue> {
+  WorkQueueProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'workQueueProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$workQueueHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<model.WorkQueue> $createElement(
     $ProviderPointer pointer,
   ) => $StreamProviderElement(pointer);
 
   @override
-  Stream<model.Crossword> create(Ref ref) {
-    return crossword(ref);
+  Stream<model.WorkQueue> create(Ref ref) {
+    return workQueue(ref);
   }
 }
 
-String _$crosswordHash() => r'ca8a5d6614df8981529caad8c8590850ad9c7d49';
+String _$workQueueHash() => r'37db928c05b799a316fe20f064ffba482ac33803';
+
+@ProviderFor(DisplayInfo)
+final displayInfoProvider = DisplayInfoProvider._();
+
+final class DisplayInfoProvider
+    extends $NotifierProvider<DisplayInfo, model.DisplayInfo> {
+  DisplayInfoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'displayInfoProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$displayInfoHash();
+
+  @$internal
+  @override
+  DisplayInfo create() => DisplayInfo();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(model.DisplayInfo value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<model.DisplayInfo>(value),
+    );
+  }
+}
+
+String _$displayInfoHash() => r'ab952ce82fac24e4e922bc7482a4b00d9298e445';
+
+abstract class _$DisplayInfo extends $Notifier<model.DisplayInfo> {
+  model.DisplayInfo build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<model.DisplayInfo, model.DisplayInfo>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<model.DisplayInfo, model.DisplayInfo>,
+              model.DisplayInfo,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}

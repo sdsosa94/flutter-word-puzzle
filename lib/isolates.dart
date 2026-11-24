@@ -57,7 +57,7 @@ Crossword? _tryPlaceCandidateWords(_PlacementParams params) {
   return null;
 }
 
-Stream<Crossword> exploreCrosswordSolutions({
+Stream<WorkQueue> exploreCrosswordSolutions({
   required Crossword crossword,
   required BuiltSet<String> wordList,
 }) async* {
@@ -68,7 +68,7 @@ Stream<Crossword> exploreCrosswordSolutions({
     startLocation: Location.at(0, 0),
   );
 
-  yield queue.crossword;
+  yield queue;
 
   final targetCells = (crossword.width * crossword.height * 0.8).floor();
   final random = Random();
@@ -120,7 +120,7 @@ Stream<Crossword> exploreCrosswordSolutions({
 
     if (nextCrossword != null) {
       queue = queue.updateFrom(nextCrossword);
-      yield queue.crossword;
+      yield queue;
     } else {
       queue = queue.remove(location);
     }
