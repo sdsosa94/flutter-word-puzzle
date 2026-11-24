@@ -28,7 +28,7 @@ class CrosswordWidget extends ConsumerWidget {
               final character = ref.watch(
                 crosswordProvider.select(
                   (asyncCrossword) =>
-                      asyncCrossword.valueOrNull?.characters[location]?.character,
+                      asyncCrossword.value?.characters[location]?.character,
                 ),
               );
               return Container(
@@ -57,6 +57,3 @@ class CrosswordWidget extends ConsumerWidget {
   }
 }
 
-extension on AsyncValue<Crossword> {
-  get valueOrNull => null;
-}

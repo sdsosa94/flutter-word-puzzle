@@ -136,4 +136,4 @@ final class CrosswordProvider
   }
 }
 
-String _$crosswordHash() => r'a4d462322b62c7878ab42f04b33048ab6eb953bf';
+String _$crosswordHash() => r'ca8a5d6614df8981529caad8c8590850ad9c7d49';

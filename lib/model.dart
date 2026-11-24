@@ -114,18 +114,108 @@ abstract class Crossword implements Built<Crossword, CrosswordBuilder> {
         ..height = height
         ..words.replace(words ?? BuiltList<CrosswordWord>()));
 
-  Crossword addWord({
+  bool get valid {
+    final wordSet = <String>{};
+    for (final w in words) {
+      if (!wordSet.add(w.word)) return false;
+    }
+
+    for (final entry in characters.entries) {
+      final loc = entry.key;
+      final char = entry.value;
+
+      if (loc.x < 0 || loc.x >= width || loc.y < 0 || loc.y >= height) {
+        return false;
+      }
+
+      if (char.acrossWord == null && char.downWord == null) {
+        return false;
+      }
+
+      final downChar = characters[loc.down];
+      if (downChar != null) {
+        if (char.downWord == null ||
+            downChar.downWord == null ||
+            char.downWord != downChar.downWord) {
+          return false;
+        }
+      }
+
+      final rightChar = characters[loc.right];
+      if (rightChar != null) {
+        if (char.acrossWord == null ||
+            rightChar.acrossWord == null ||
+            char.acrossWord != rightChar.acrossWord) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  Crossword? addWord({
     required Location location,
     required String word,
     required Direction direction,
   }) {
-    return rebuild((b) => b.words.add(
+    if (words.any((w) => w.word == word)) {
+      return null;
+    }
+
+    if (direction == Direction.across) {
+      if (location.x < 0 ||
+          location.x + word.length > width ||
+          location.y < 0 ||
+          location.y >= height) {
+        return null;
+      }
+    } else {
+      if (location.x < 0 ||
+          location.x >= width ||
+          location.y < 0 ||
+          location.y + word.length > height) {
+        return null;
+      }
+    }
+
+    var overlaps = false;
+    for (var i = 0; i < word.length; i++) {
+      final loc = direction == Direction.across
+          ? location.rightOffset(i)
+          : location.downOffset(i);
+      final existing = characters[loc];
+      if (existing != null) {
+        overlaps = true;
+        if (existing.character != word[i]) {
+          return null;
+        }
+        if (direction == Direction.across && existing.acrossWord != null) {
+          return null;
+        }
+        if (direction == Direction.down && existing.downWord != null) {
+          return null;
+        }
+      }
+    }
+
+    if (words.isNotEmpty && !overlaps) {
+      return null;
+    }
+
+    final candidate = rebuild((b) => b.words.add(
           CrosswordWord.word(
             location: location,
             word: word,
             direction: direction,
           ),
         ));
+
+    if (!candidate.valid) {
+      return null;
+    }
+
+    return candidate;
   }
 
   @BuiltValueHook(finalizeBuilder: true)
