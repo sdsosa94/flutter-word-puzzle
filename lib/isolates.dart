@@ -7,87 +7,50 @@ import 'package:built_collection/built_collection.dart';
 import 'model.dart';
 import 'utils.dart';
 
-class _ExploreParams {
+class _PlacementParams {
   final Crossword crossword;
-  final BuiltSet<String> wordList;
-  final int seed;
+  final List<String> words;
+  final Location location;
+  final Direction direction;
+  final String? targetCharacter;
 
-  const _ExploreParams({
+  const _PlacementParams({
     required this.crossword,
-    required this.wordList,
-    required this.seed,
+    required this.words,
+    required this.location,
+    required this.direction,
+    this.targetCharacter,
   });
 }
 
-Crossword? _tryPlaceRandomWord(_ExploreParams params) {
+Crossword? _tryPlaceCandidateWords(_PlacementParams params) {
   final crossword = params.crossword;
-  final wordList = params.wordList;
-  final random = Random(params.seed);
+  final location = params.location;
+  final direction = params.direction;
+  final targetChar = params.targetCharacter;
 
-  if (crossword.words.isEmpty) {
-    for (var attempt = 0; attempt < 100; attempt++) {
-      final word = wordList.randomElement(random);
-      final direction =
-          random.nextBool() ? Direction.across : Direction.down;
-      final maxX = direction == Direction.across
-          ? crossword.width - word.length
-          : crossword.width - 1;
-      final maxY = direction == Direction.down
-          ? crossword.height - word.length
-          : crossword.height - 1;
-      if (maxX < 0 || maxY < 0) continue;
-      final x = random.nextInt(maxX + 1);
-      final y = random.nextInt(maxY + 1);
+  for (final word in params.words) {
+    if (targetChar != null) {
+      for (var i = 0; i < word.length; i++) {
+        if (word[i] == targetChar) {
+          final startLoc = direction == Direction.across
+              ? Location.at(location.x - i, location.y)
+              : Location.at(location.x, location.y - i);
+          final candidate = crossword.addWord(
+            location: startLoc,
+            word: word,
+            direction: direction,
+          );
+          if (candidate != null) return candidate;
+        }
+      }
+    } else {
       final candidate = crossword.addWord(
-        location: Location.at(x, y),
+        location: location,
         word: word,
         direction: direction,
       );
       if (candidate != null) return candidate;
-    }
-    return null;
-  }
-
-  final entries = crossword.characters.entries.toList();
-  if (entries.isEmpty) return null;
-
-  for (var attempt = 0; attempt < 1000; attempt++) {
-    final entry = entries[random.nextInt(entries.length)];
-    final char = entry.value.character;
-    final loc = entry.key;
-
-    final possibleDirections = <Direction>[];
-    if (entry.value.acrossWord == null) {
-      possibleDirections.add(Direction.across);
-    }
-    if (entry.value.downWord == null) {
-      possibleDirections.add(Direction.down);
-    }
-    if (possibleDirections.isEmpty) continue;
-
-    final direction =
-        possibleDirections[random.nextInt(possibleDirections.length)];
-
-    final word = wordList.randomElement(random);
-    if (!word.contains(char)) continue;
-
-    final matchingIndices = <int>[];
-    for (var i = 0; i < word.length; i++) {
-      if (word[i] == char) matchingIndices.add(i);
-    }
-    final charIndex = matchingIndices[random.nextInt(matchingIndices.length)];
-
-    final startLoc = direction == Direction.across
-        ? Location.at(loc.x - charIndex, loc.y)
-        : Location.at(loc.x, loc.y - charIndex);
-
-    final next = crossword.addWord(
-      location: startLoc,
-      word: word,
-      direction: direction,
-    );
-    if (next != null) {
-      return next;
     }
   }
 
@@ -98,27 +61,71 @@ Stream<Crossword> exploreCrosswordSolutions({
   required Crossword crossword,
   required BuiltSet<String> wordList,
 }) async* {
-  var current = crossword;
-  yield current;
+  final stopwatch = Stopwatch()..start();
+  var queue = WorkQueue.from(
+    crossword: crossword,
+    candidateWords: wordList,
+    startLocation: Location.at(0, 0),
+  );
 
-  final targetCells = (current.width * current.height * 0.8).floor();
+  yield queue.crossword;
+
+  final targetCells = (crossword.width * crossword.height * 0.8).floor();
   final random = Random();
 
-  while (current.characters.length < targetCells) {
+  while (!queue.isCompleted && queue.crossword.characters.length < targetCells) {
     await Future<void>.delayed(const Duration(milliseconds: 100));
 
-    final next = await compute(
-      _tryPlaceRandomWord,
-      _ExploreParams(
-        crossword: current,
-        wordList: wordList,
-        seed: random.nextInt(1 << 31),
+    final entries = queue.locationsToTry.entries.toList();
+    final entry = entries[random.nextInt(entries.length)];
+    final location = entry.key;
+    final direction = entry.value;
+
+    final List<String> wordsToTry;
+    final String? targetChar;
+
+    if (queue.crossword.words.isEmpty) {
+      targetChar = null;
+      final words = queue.candidateWords.toList()..shuffle(random);
+      wordsToTry = words.take(1000).toList();
+    } else {
+      final char = queue.crossword.characters[location];
+      if (char == null) {
+        queue = queue.remove(location);
+        continue;
+      }
+      targetChar = char.character;
+      final matching = queue.candidateWords
+          .where((word) => word.contains(targetChar!))
+          .toList()
+        ..shuffle(random);
+      wordsToTry = matching.take(1000).toList();
+    }
+
+    if (wordsToTry.isEmpty) {
+      queue = queue.remove(location);
+      continue;
+    }
+
+    final nextCrossword = await compute(
+      _tryPlaceCandidateWords,
+      _PlacementParams(
+        crossword: queue.crossword,
+        words: wordsToTry,
+        location: location,
+        direction: direction,
+        targetCharacter: targetChar,
       ),
     );
 
-    if (next != null) {
-      current = next;
-      yield current;
+    if (nextCrossword != null) {
+      queue = queue.updateFrom(nextCrossword);
+      yield queue.crossword;
+    } else {
+      queue = queue.remove(location);
     }
   }
+
+  stopwatch.stop();
+  debugPrint('Total crossword generation time: ${stopwatch.elapsed.formatted}');
 }

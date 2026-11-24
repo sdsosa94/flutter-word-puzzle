@@ -254,10 +254,80 @@ abstract class Crossword implements Built<Crossword, CrosswordBuilder> {
   static Serializer<Crossword> get serializer => _$crosswordSerializer;
 }
 
+abstract class WorkQueue implements Built<WorkQueue, WorkQueueBuilder> {
+  Crossword get crossword;
+  BuiltMap<Location, Direction> get locationsToTry;
+  BuiltSet<Location> get badLocations;
+  BuiltSet<String> get candidateWords;
+
+  bool get isCompleted => locationsToTry.isEmpty || candidateWords.isEmpty;
+
+  WorkQueue._();
+  factory WorkQueue([void Function(WorkQueueBuilder) updates]) = _$WorkQueue;
+
+  static WorkQueue from({
+    required Crossword crossword,
+    required Iterable<String> candidateWords,
+    required Location startLocation,
+  }) {
+    final locations = <Location, Direction>{};
+    if (crossword.words.isEmpty) {
+      locations[startLocation] = Direction.across;
+    } else {
+      for (final entry in crossword.characters.entries) {
+        final loc = entry.key;
+        final char = entry.value;
+        if (char.acrossWord != null && char.downWord == null) {
+          locations[loc] = Direction.down;
+        } else if (char.downWord != null && char.acrossWord == null) {
+          locations[loc] = Direction.across;
+        }
+      }
+    }
+
+    return WorkQueue((b) => b
+      ..crossword.replace(crossword)
+      ..candidateWords.replace(candidateWords)
+      ..locationsToTry.addAll(locations)
+      ..badLocations.replace(BuiltSet<Location>()));
+  }
+
+  WorkQueue remove(Location location) {
+    return rebuild((b) => b
+      ..locationsToTry.remove(location)
+      ..badLocations.add(location));
+  }
+
+  WorkQueue updateFrom(Crossword crossword) {
+    final newLocations = <Location, Direction>{};
+    for (final entry in crossword.characters.entries) {
+      final loc = entry.key;
+      final char = entry.value;
+      if (badLocations.contains(loc)) continue;
+
+      if (char.acrossWord != null && char.downWord == null) {
+        newLocations[loc] = Direction.down;
+      } else if (char.downWord != null && char.acrossWord == null) {
+        newLocations[loc] = Direction.across;
+      }
+    }
+
+    final usedWords = crossword.words.map((w) => w.word).toSet();
+
+    return rebuild((b) => b
+      ..crossword.replace(crossword)
+      ..candidateWords.removeAll(usedWords)
+      ..locationsToTry.replace(newLocations));
+  }
+
+  static Serializer<WorkQueue> get serializer => _$workQueueSerializer;
+}
+
 @SerializersFor([
   Location,
   Crossword,
   CrosswordWord,
   CrosswordCharacter,
+  WorkQueue,
 ])
 final Serializers serializers = _$serializers;
